@@ -1,14 +1,43 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  forwardRef,
+  HttpException,
+  HttpStatus,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Employee } from '../Entity/employee.entity';
 import { Repository } from 'typeorm';
+import { CompleteEmployee } from '../dtos/complete.employee.dto';
+import { WorkSchedule } from 'src/WorkSchedule/Entitys/workschedule.entity';
+import { Departments } from 'src/departments/Entitys/department.entity';
+import { DepartmentsService } from 'src/departments/Services/departments.service';
 
 @Injectable()
 export class EmployeeService {
   constructor(
     @InjectRepository(Employee)
     private employeeRepository: Repository<Employee>,
+    @Inject(forwardRef(() => DepartmentsService))
+    private departmentService: DepartmentsService,
   ) {}
+  async getAllEmployee() {
+    return await this.employeeRepository.find();
+  }
+  //completeEmployee
+  async completeEmployee(information: CompleteEmployee) {
+    console.log(information);
+
+    // const employee = await this.employeeRepository.findOne({
+    //   where: { employee_id: Number(information.employee) },
+    //   relations: ['workSchedules'],
+    // });
+    // const Department = await this.departmentRepository.findOne({
+    //   where: { department_name: information.department.toLowerCase() },
+    // // });
+    // employee.department = Department;
+    // employee.avatar;
+  }
   async findEmployeeByEmail(emailEmployee: string): Promise<Employee> {
     const employee = await this.employeeRepository.findOneBy({
       email: emailEmployee,

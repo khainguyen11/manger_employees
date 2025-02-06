@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { EmployeesModule } from './employees/employee.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
@@ -18,9 +18,16 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { Payroll } from './Payroll/Entitys/payroll.entity';
 import { Penalties } from './Payroll/Entitys/penalties.entity';
 import { PayrollModule } from './Payroll/payroll.module';
+import { MulterModule } from '@nestjs/platform-express';
+import { postModule } from './Post/post.module';
+import { PostEntity } from './Post/Entitys/post.entity';
+import { FileUploadMiddleware } from './middlewares/upload-file.middleware';
 
 @Module({
   imports: [
+    MulterModule.register({
+      dest: './uploads/images', // Thư mục lưu trữ hình ảnh tải lên
+    }),
     ConfigModule.forRoot(),
     ScheduleModule.forRoot(),
     TypeOrmModule.forRoot({
@@ -41,6 +48,7 @@ import { PayrollModule } from './Payroll/payroll.module';
         EmployeeError,
         Payroll,
         Penalties,
+        PostEntity,
       ],
       synchronize: true,
     }),
@@ -50,10 +58,17 @@ import { PayrollModule } from './Payroll/payroll.module';
     WorkScheduleModule,
     AttendanceModule,
     PayrollModule,
+    postModule,
 
     JwtModule.register({
       global: true,
     }),
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(FileUploadMiddleware)
+      .forRoutes('posts/uploads', 'employee/complete');
+  }
+}

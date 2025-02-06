@@ -18,6 +18,22 @@ export class MailService {
     });
   }
 
+  async sendNotify(to: string, subject: string, text: string) {
+    try {
+      const info = await this.transporter.sendMail({
+        from: '"khai" <khai1108070707@example.com>', // Tên và địa chỉ email người gửi
+        to, // Email người nhận
+        subject, // Tiêu đề email
+        text, // Nội dung email
+      });
+
+      console.log('Email sent: ', info.messageId);
+      return info;
+    } catch (error) {
+      console.error('Error sending email: ', error);
+      throw error;
+    }
+  }
   async sendSalaryEmail(
     to: string,
     subject: string,

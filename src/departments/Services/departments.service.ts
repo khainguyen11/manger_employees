@@ -1,15 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Departments } from '../Entitys/department.entity';
 import { Repository } from 'typeorm';
 import { EmployeeService } from 'src/employees/Services/employee.service';
-import { departmentDto } from '../dtos/department.dto';
 
 @Injectable()
 export class DepartmentsService {
   constructor(
     @InjectRepository(Departments)
     private departmentRepository: Repository<Departments>,
+    @Inject(forwardRef(() => EmployeeService))
     private employeeService: EmployeeService,
   ) {}
   async createDepartment(newDepartment) {

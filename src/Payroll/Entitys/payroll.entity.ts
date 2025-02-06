@@ -3,6 +3,7 @@ import {
   Column,
   Entity,
   JoinColumn,
+  ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -25,7 +26,6 @@ export class Payroll {
   deductions: number;
   @Column()
   total_pay: number;
-  @OneToOne(() => Employee, (Employee) => Employee.payroll)
-  @JoinColumn()
+  @ManyToOne(() => Employee, (Employee) => Employee.payroll)
   employee: Employee;
 }

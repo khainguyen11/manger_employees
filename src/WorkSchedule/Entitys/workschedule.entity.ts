@@ -14,8 +14,9 @@ export class WorkSchedule {
 
   @Column()
   workDate: String; // Ngày làm việc đã đăng ký (yyyy-mm-dd)
-  @ManyToOne(() => Employee, (Employee) => Employee.workSchedules)
-  @JoinColumn({ name: 'employee_id' })
+  @ManyToOne(() => Employee, (Employee) => Employee.workSchedules, {
+    onDelete: 'CASCADE',
+  })
   employee: Employee;
   @Column()
   weekNumber: number;

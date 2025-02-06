@@ -21,7 +21,7 @@ export class AttendanceEntity {
   check_out: String;
   @OneToMany(() => EmployeeError, (EmployeeError) => EmployeeError.Attendance)
   status: EmployeeError[];
-  @Column({ nullable: true })
+  @Column('float', { nullable: true })
   overtime_hours: number;
 
   @ManyToOne(() => Employee, (Employee) => Employee.attendances, {

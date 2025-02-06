@@ -48,10 +48,15 @@ export class WorkScheduleService {
     const schedules: WorkSchedule[] = [];
     const currentDate = new Date(startDate);
     //Check if you already have a calendar for the week
+
     await this.workScheduleRepository.delete({
       employee: { employee_id: employee_id },
-      workDate: Between(startDate.toISOString(), endDate.toISOString()),
+      workDate: Between(
+        startDate.toISOString().split('T')[0],
+        endDate.toISOString().split('T')[0],
+      ),
     });
+
     //create new calender for week
     while (currentDate <= endDate) {
       const dayOfWeek = currentDate.getDay(); //0:sunday; 1: monday....

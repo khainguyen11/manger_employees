@@ -12,6 +12,7 @@ import { Response } from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
 import { MailService } from './email.service';
+import { log } from 'console';
 @Injectable()
 export class PayrollService {
   constructor(
@@ -26,6 +27,10 @@ export class PayrollService {
     private employeeErrorRepository: Repository<EmployeeError>,
     private mailService: MailService,
   ) {}
+  getDayOfWeek(dateString) {
+    const date = new Date(dateString);
+    return date.getDay();
+  }
   convert_hour_to_number(n) {
     const hourArray = n.split(':');
     return Number(hourArray[0]) + Number(hourArray[1]) / 60;
@@ -67,7 +72,7 @@ export class PayrollService {
     return all_employee;
   }
   @Cron('0 1 1 * *', { timeZone: 'Asia/Ho_Chi_Minh' })
-  //   @Cron('5 * * * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
+  // @Cron('2 * * * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
   async calc_total_pay_for_employee() {
     try {
       const PEN = await this.penaltyRepository.find();
@@ -75,10 +80,13 @@ export class PayrollService {
       console.log(PEN);
       //get date
       const date = this.Back_to_last_month(this.convertToVN(new Date()));
-      //   const date = this.convertToVN(new Date());
+      // const date = this.convertToVN(new Date());
+      console.log(date);
+
       //get_all_employee
       const all_employee = await this.get_All_employee(ROLES.EMPLOYEE);
-      if (!all_employee) {
+      if (!all_employee || all_employee.length === 0) {
+        console.log('No employees found for payroll processing.');
         return;
       }
       for (const employee of all_employee) {
@@ -95,23 +103,25 @@ export class PayrollService {
           continue;
         }
         //calc error for employee
-        let minus = 0;
-        let total_day_go_to_work = 22;
-        if (attendance.length < 22) {
-          let total_day = 22 - attendance.length;
-          attendance.forEach((a) => {
-            if (!a.check_out) {
-              total_day -= 1;
-            }
-          });
-          minus = (+process.env.BASE_SALARY / 22) * total_day;
-          total_day_go_to_work = total_day_go_to_work - total_day;
-        }
-        let deductions = minus;
+        let minus = +process.env.BASE_SALARY / 22;
+        let deductions = 0;
         let overtime_hours = 0;
-
+        let total_day_go_to_work = attendance.length;
         for (const c_attendance of attendance) {
+          if (!c_attendance.check_out) {
+            total_day_go_to_work -= 1;
+            continue;
+          }
+          const day = this.getDayOfWeek(c_attendance.date);
+          console.log(day);
+          if (day == 0 || day == 6) {
+            total_day_go_to_work -= 1;
+            overtime_hours += c_attendance.overtime_hours;
+            console.log(overtime_hours);
+            continue;
+          }
           overtime_hours += c_attendance.overtime_hours;
+
           const error = await this.employeeErrorRepository.find({
             where: {
               Attendance: { attendance_id: c_attendance.attendance_id },
@@ -145,7 +155,6 @@ export class PayrollService {
         }
         console.log(deductions);
         console.log(overtime_hours);
-        console.log(total_day_go_to_work);
         const PAYROLL_FOR_EMPLOYEE = new Payroll();
         PAYROLL_FOR_EMPLOYEE.month = date
           .toISOString()
@@ -158,7 +167,7 @@ export class PayrollService {
           overtime_hours * +process.env.OVERTIME_SALARY;
         PAYROLL_FOR_EMPLOYEE.deductions = deductions;
         PAYROLL_FOR_EMPLOYEE.total_pay =
-          +process.env.BASE_SALARY +
+          total_day_go_to_work * minus +
           overtime_hours * +process.env.OVERTIME_SALARY -
           deductions;
         PAYROLL_FOR_EMPLOYEE.employee = employee;
@@ -169,17 +178,18 @@ export class PayrollService {
     }
   }
   @Cron('0 1 1 * *', { timeZone: 'Asia/Ho_Chi_Minh' })
-  //   @Cron('5 * * * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
+  // @Cron('2 * * * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
   async calc_total_pay_for_intern() {
     try {
       //get date
       const date = this.Back_to_last_month(this.convertToVN(new Date()));
 
-      //   const date = this.convertToVN(new Date());
+      // const date = this.convertToVN(new Date());
 
       //get_all_employee
       const all_employee = await this.get_All_employee(ROLES.INTERN);
-      if (!all_employee) {
+      if (!all_employee || all_employee.length === 0) {
+        console.log('No employees found for payroll processing.');
         return;
       }
       for (const employee of all_employee) {
@@ -202,30 +212,42 @@ export class PayrollService {
           console.log('No salary');
           continue;
         }
-        let total_day_go_to_work = 22;
-        if (attendance.length < 22) {
-          let total_day = 22 - attendance.length;
-          attendance.forEach((a) => {
-            if (!a.check_out) {
-              total_day -= 1;
-            }
-          });
-          total_day_go_to_work = total_day_go_to_work - total_day;
-        }
+        // viết lại logic này đang lạ
+        let total_day_go_to_work = attendance.length;
         for (const day_attendance of attendance) {
-          overtime_hours += day_attendance.overtime_hours;
-          if (this.convert_hour_to_number(day_attendance.check_out) > 14) {
-            const total_hour =
-              this.convert_hour_to_number(day_attendance.check_out) -
-              this.convert_hour_to_number(day_attendance.check_in) -
-              2;
-            total_pay += +process.env.HOUR_SALARY * total_hour;
-          } else {
-            const total_hour =
-              12.5 - this.convert_hour_to_number(day_attendance.check_in);
-            total_pay += +process.env.HOUR_SALARY * total_hour;
+          if (!day_attendance.check_out) {
+            total_day_go_to_work -= 1;
+            continue;
           }
+          const day = this.getDayOfWeek(day_attendance.date);
+          if (day == 0 || day == 6) {
+            overtime_hours += day_attendance.overtime_hours;
+            console.log(overtime_hours);
+
+            continue;
+          }
+          overtime_hours += day_attendance.overtime_hours;
+          const checkInTime = this.convert_hour_to_number(
+            day_attendance.check_in,
+          );
+          const checkOutTime = this.convert_hour_to_number(
+            day_attendance.check_out,
+          );
+          let total_hour = 0;
+
+          // Kiểm tra nếu nhân viên làm sau 14h thì trừ đi 2 giờ nghỉ trưa
+          if (checkOutTime > 14) {
+            total_hour = checkOutTime - checkInTime - 2;
+          } else {
+            total_hour = 12.5 - checkInTime;
+          }
+
+          // Cập nhật tổng lương
+          total_pay += total_hour * +process.env.HOUR_SALARY;
         }
+        console.log(total_pay);
+        console.log(overtime_hours);
+
         const PAYROLL_FOR_INTERN = new Payroll();
         PAYROLL_FOR_INTERN.month = date
           .toISOString()
@@ -239,7 +261,6 @@ export class PayrollService {
         );
         PAYROLL_FOR_INTERN.deductions = deductions;
         PAYROLL_FOR_INTERN.employee = employee;
-        console.log(total_pay);
         PAYROLL_FOR_INTERN.total_pay =
           this.round_the_number(total_pay) +
           this.round_the_number(overtime_hours * +process.env.OVERTIME_SALARY);

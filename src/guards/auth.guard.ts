@@ -36,7 +36,7 @@ export class AuthGuard implements CanActivate {
         const decoderEmployee = await this.jwtService.verify(refreshToken, {
           secret: keyStore.refresh_private_key,
         });
-        console.log(decoderEmployee);
+        // console.log(decoderEmployee);
 
         if (decoderEmployee.employee_id.toString() !== employee_id) {
           throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
@@ -50,25 +50,25 @@ export class AuthGuard implements CanActivate {
           await this.authService.deleteRefreshTokenKey(keyStore);
           throw new UnauthorizedException('Token has expired');
         } else {
-          console.log(error);
+          // console.log(error);
 
           throw new UnauthorizedException('Invalid token');
         }
       }
     }
-    console.log(request.headers);
+    // console.log(request.headers);
 
     const accessToken = request.headers[AuthEnum.AUTHORIZATION];
-    console.log(accessToken);
-    console.log(employee_id);
+    // console.log(accessToken);
+    // console.log(employee_id);
 
     try {
-      console.log(keyStore);
+      // console.log(keyStore);
 
       const decoderEmployee = await this.jwtService.verify(accessToken, {
         secret: keyStore.access_private_key,
       });
-      console.log(decoderEmployee);
+      // console.log(decoderEmployee);
 
       if (decoderEmployee.employee_id.toString() !== employee_id) {
         throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
@@ -78,7 +78,7 @@ export class AuthGuard implements CanActivate {
         decoderEmployee.employee_email,
       );
     } catch (error) {
-      console.log(error);
+      // console.log(error);
 
       if (error.name === 'TokenExpiredError') {
         throw new UnauthorizedException('Token has expired');

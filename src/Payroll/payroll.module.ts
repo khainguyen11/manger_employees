@@ -21,5 +21,6 @@ import { MailService } from './Services/email.service';
   ],
   controllers: [payrollController],
   providers: [PayrollService, MailService],
+  exports: [MailService],
 })
 export class PayrollModule {}
