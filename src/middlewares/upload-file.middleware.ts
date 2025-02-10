@@ -87,7 +87,7 @@ export class FileUploadMiddleware implements NestMiddleware {
           });
         } else {
           const files = req.files as Express.Multer.File[] | undefined;
-          req.body.files = files; // Thêm files vào req.body
+          req.body.avatar = files[0].filename; // Thêm files vào req.body
           req.body.employee = req.headers[AuthEnum.EMPLOYEE_ID];
           // console.log('Files đã tải lên:', files);
           next(); // Tiếp tục yêu cầu đến controller nếu không có lỗi

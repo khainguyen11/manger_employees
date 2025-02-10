@@ -18,12 +18,12 @@ export class Departments {
   @PrimaryGeneratedColumn()
   department_id: number;
   @OneToOne(() => Employee, (Employee) => Employee.department_manager)
-  @JoinColumn()
-  department_manager: Employee;
+  @JoinColumn({ name: 'manager_id' })
+  manager: Employee;
   @Column()
   Inauguration_date: Date;
   @OneToMany(() => Employee, (Employee) => Employee.department)
-  members_of_department: Employee[];
+  members: Employee[];
   @Column()
   department_name: String;
 }

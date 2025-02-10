@@ -28,15 +28,19 @@ export class EmployeeService {
   async completeEmployee(information: CompleteEmployee) {
     console.log(information);
 
-    // const employee = await this.employeeRepository.findOne({
-    //   where: { employee_id: Number(information.employee) },
-    //   relations: ['workSchedules'],
-    // });
-    // const Department = await this.departmentRepository.findOne({
-    //   where: { department_name: information.department.toLowerCase() },
-    // // });
-    // employee.department = Department;
-    // employee.avatar;
+    const employee = await this.employeeRepository.findOne({
+      where: { employee_id: Number(information.employee) },
+      relations: ['workSchedules'],
+    });
+    const Department = await this.departmentService.get_department_by_name(
+      information.department,
+    );
+
+    employee.department = Department;
+    employee.avatar = information.avatar;
+    const emp = await this.employeeRepository.save(employee);
+
+    return emp;
   }
   async findEmployeeByEmail(emailEmployee: string): Promise<Employee> {
     const employee = await this.employeeRepository.findOneBy({

@@ -8,6 +8,7 @@ import { WorkSchedule } from 'src/WorkSchedule/Entitys/workschedule.entity';
 import {
   Column,
   Entity,
+  JoinColumn,
   ManyToOne,
   OneToMany,
   OneToOne,
@@ -33,9 +34,9 @@ export class Employee {
   @Exclude()
   @Column({ default: ROLES.INTERN })
   role: string;
-  @Column()
+  @Column({ nullable: true })
   avatar: string;
-  @OneToOne(() => Departments, (Departments) => Departments.department_manager)
+  @OneToOne(() => Departments, (Departments) => Departments.manager)
   department_manager: Departments;
   @OneToMany(() => WorkSchedule, (workSchedule) => workSchedule.employee)
   workSchedules: WorkSchedule[];
@@ -48,9 +49,7 @@ export class Employee {
   payroll: Payroll[];
   @OneToMany(() => PostEntity, (PostEntity) => PostEntity.employee)
   post: PostEntity[];
-  @ManyToOne(
-    () => Departments,
-    (Departments) => Departments.members_of_department,
-  )
+  @ManyToOne(() => Departments, (Departments) => Departments.members)
+  @JoinColumn({ name: 'department_id' }) // Khai báo khóa ngoại
   department: Departments;
 }
