@@ -13,18 +13,6 @@ import { ApiBody, ApiHeaders } from '@nestjs/swagger';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { OwnershipGuard } from 'src/guards/ownership.guard';
 @UseGuards(AuthGuard)
-@ApiHeaders([
-  {
-    name: 'x-authorization', // Tên của custom header
-    description: 'add access token', // Mô tả cho header
-    required: true, // Nếu header này bắt buộc
-  },
-  {
-    name: 'employee_id', // Tên của custom header
-    description: 'add employee_id', // Mô tả cho header
-    required: true, // Nếu header này bắt buộc
-  },
-])
 @Controller('attendance')
 export class AttendanceController {
   constructor(private attendanceService: AttendanceService) {}

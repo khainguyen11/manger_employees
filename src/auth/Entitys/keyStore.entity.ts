@@ -2,7 +2,7 @@ import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { RefreshTokenUsed } from './refreshTokenUsed';
 export enum AuthEnum {
   EMPLOYEE_ID = 'employee_id',
-  AUTHORIZATION = 'x-authorization',
+  AUTHORIZATION = 'authorization',
   REFRESHTOKEN = 'refreshtoken',
 }
 @Entity()

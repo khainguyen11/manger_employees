@@ -1,5 +1,6 @@
 import {
   Body,
+  ClassSerializerInterceptor,
   Controller,
   Delete,
   Get,
@@ -9,108 +10,105 @@ import {
   Post,
   Put,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
-import { RegisterDto } from '../dtos/register.dto';
 import { WorkScheduleService } from '../Services/worlschedule.service';
-import { DeleteDto } from '../dtos/delete.dto';
-import { RolesGuard } from 'src/guards/role.guard';
-import { ROLES } from 'src/employees/Entity/employee.entity';
+
 import { AuthGuard } from 'src/guards/auth.guard';
-import { ApiBody, ApiHeaders } from '@nestjs/swagger';
-import { OwnershipGuard } from 'src/guards/ownership.guard';
+import {
+  ApiBasicAuth,
+  ApiBearerAuth,
+  ApiBody,
+  ApiHeaders,
+} from '@nestjs/swagger';
+import { WorkDayDto } from '../dtos/workday.dto';
+import { WorkDaySearchDtp } from '../dtos/work_day_search.dto';
 @UseGuards(AuthGuard)
+@UseInterceptors(ClassSerializerInterceptor)
+@ApiBearerAuth()
 @Controller('work-schedules')
-@ApiHeaders([
-  {
-    name: 'x-authorization', // Tên của custom header
-    description: 'add access token', // Mô tả cho header
-    required: true, // Nếu header này bắt buộc
-  },
-  {
-    name: 'employee_id', // Tên của custom header
-    description: 'add employee_id', // Mô tả cho header
-    required: true, // Nếu header này bắt buộc
-  },
-])
 export class WorkScheduleController {
   constructor(private workScheduleService: WorkScheduleService) {}
-  @Post('week/:employeeId')
-  @UseGuards(OwnershipGuard)
+  //get all schedule of employee in one day
+  @ApiBody({
+    description: 'find schedule',
+    type: WorkDaySearchDtp, // Dùng DTO ở đây
+  })
+  @Post('schedule_employee')
+  get_schedule_of_all_employee(@Body() search_schedule: WorkDaySearchDtp) {
+    return this.workScheduleService.Get_the_schedule_of_all_employee(
+      search_schedule,
+    );
+  }
+  //create schedule
   @ApiBody({
     description: 'register schedule',
-    type: RegisterDto,
+    type: [WorkDayDto], // Dùng DTO ở đây
   })
-  async registerWeeklySchedule(
-    @Param('employeeId', ParseIntPipe) employeeId: number,
-    @Body() register: RegisterDto,
+  @Post(':id')
+  register(
+    @Param('id') employee_id: String,
+    @Body() register_schedule: [WorkDayDto],
   ) {
-    const registerSuccess =
-      await this.workScheduleService.registerAndUpdateWeeklySchedule(
-        employeeId,
-        register,
-      );
-    return {
-      status: HttpStatus.CREATED,
-      metadata: registerSuccess,
-    };
+    console.log('vao controller');
+
+    return this.workScheduleService.createScheduleForIntern(
+      employee_id,
+      register_schedule,
+    );
   }
+  //update schedule
   @ApiBody({
     description: 'update schedule',
-    type: RegisterDto,
+    type: [WorkDayDto], // Dùng DTO ở đây
   })
-  @Put('week/:employeeId')
-  @UseGuards(OwnershipGuard)
-  async update(
-    @Param('employeeId', ParseIntPipe) employeeId: number,
-    @Body() register: RegisterDto,
+  @Put('update/:id')
+  update_schedule(
+    @Param('id') employee_id: String,
+    @Body() register_schedule: [WorkDayDto],
   ) {
-    const registerSuccess =
-      await this.workScheduleService.registerAndUpdateWeeklySchedule(
-        employeeId,
-        register,
-      );
-    return {
-      status: HttpStatus.CREATED,
-      metadata: registerSuccess,
-    };
+    console.log('vao controller');
+
+    return this.workScheduleService.updateScheduleForIntern(
+      Number(employee_id),
+      register_schedule,
+    );
   }
+  //get current week schedule
+  @Get(':id')
+  get_week_schedule(@Param('id') employee_id: String) {
+    return this.workScheduleService.Get_the_week_schedule(employee_id);
+  }
+  //get schedule
+  @Post('schedule/:id')
+  @ApiBody({
+    description: 'search schedule detail of employee',
+    type: WorkDaySearchDtp, // Dùng DTO ở đây
+  })
+  search_schedule(
+    @Param('id') employee_id: String,
+    @Body() search_schedule: WorkDaySearchDtp,
+  ) {
+    return this.workScheduleService.Get_the_schedule(
+      employee_id,
+      search_schedule,
+    );
+  }
+  //remove schedule
   @ApiBody({
     description: 'delete schedule',
-    type: DeleteDto,
+    type: WorkDaySearchDtp, // Dùng DTO ở đây
   })
-  @UseGuards(OwnershipGuard)
-  @Delete('week/:employeeId')
-  async delete(
-    @Param('employeeId', ParseIntPipe) employeeId: number,
-    @Body() deleteDto: DeleteDto,
+  @Post('delete/:id')
+  delete_schedule(
+    @Param('id') employee_id: String,
+    @Body() delete_schedule: WorkDaySearchDtp,
   ) {
-    const Success = this.workScheduleService.deleteWeekSchedule(
-      employeeId,
-      deleteDto,
+    console.log(delete_schedule);
+
+    return this.workScheduleService.deleteScheduleForIntern(
+      Number(employee_id),
+      delete_schedule,
     );
-    return {
-      status: HttpStatus.OK,
-      metadata: Success,
-    };
-  }
-  @UseGuards(new RolesGuard([ROLES.MANAGER]))
-  @Get('week')
-  async get() {
-    const data = await this.workScheduleService.getSchedule();
-    return {
-      status: HttpStatus.OK,
-      metadata: data,
-    };
-  }
-  @UseGuards(OwnershipGuard)
-  @Get('week/detail/:employeeId')
-  async getDetailSchedule(
-    @Param('employeeId', ParseIntPipe) employeeId: number,
-  ) {
-    const data = await this.workScheduleService.getDetailSchedule(employeeId);
-    return {
-      status: HttpStatus.OK,
-      metadata: data,
-    };
   }
 }

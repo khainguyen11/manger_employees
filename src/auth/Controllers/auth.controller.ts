@@ -18,35 +18,11 @@ import { ApiBody, ApiHeader, ApiHeaders, ApiTags } from '@nestjs/swagger';
 export class AuthController {
   constructor(private authService: AuthService) {}
   @UseGuards(AuthGuard)
-  @ApiHeaders([
-    {
-      name: 'x-authorization', // Tên của custom header
-      description: 'add access token', // Mô tả cho header
-      required: true, // Nếu header này bắt buộc
-    },
-    {
-      name: 'employee_id', // Tên của custom header
-      description: 'add employee_id', // Mô tả cho header
-      required: true, // Nếu header này bắt buộc
-    },
-  ])
   @Post('/employee/me')
   async checkToken() {
     return true;
   }
   @UseGuards(AuthGuard)
-  @ApiHeaders([
-    {
-      name: 'x-authorization', // Tên của custom header
-      description: 'add access token', // Mô tả cho header
-      required: true, // Nếu header này bắt buộc
-    },
-    {
-      name: 'employee_id', // Tên của custom header
-      description: 'add employee_id', // Mô tả cho header
-      required: true, // Nếu header này bắt buộc
-    },
-  ])
   @Post('/employee/login')
   async loginWithToken() {
     return true;
@@ -69,18 +45,6 @@ export class AuthController {
   }
   @UseGuards(AuthGuard)
   @Post('logout')
-  @ApiHeaders([
-    {
-      name: 'x-authorization', // Tên của custom header
-      description: 'add access token', // Mô tả cho header
-      required: true, // Nếu header này bắt buộc
-    },
-    {
-      name: 'employee_id', // Tên của custom header
-      description: 'add employee_id', // Mô tả cho header
-      required: true, // Nếu header này bắt buộc
-    },
-  ])
   logout(@Req() request) {
     return this.authService.logout(request.keyStore);
   }
@@ -88,12 +52,7 @@ export class AuthController {
   @Post('refresh')
   @ApiHeader({
     name: 'refreshtoken', // Tên của custom header
-    description: 'add refresh token', // Mô tả cho header
-    required: true, // Nếu header này bắt buộc
-  })
-  @ApiHeader({
-    name: 'employee_id', // Tên của custom header
-    description: 'add employee_id', // Mô tả cho header
+    description: 'add_refresh_token', // Mô tả cho header
     required: true, // Nếu header này bắt buộc
   })
   refresh(@Req() request) {

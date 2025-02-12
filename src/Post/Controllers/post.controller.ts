@@ -14,18 +14,6 @@ import {
 import { PostService } from '../Services/post.service';
 import { AuthGuard } from 'src/guards/auth.guard';
 @UseGuards(AuthGuard)
-@ApiHeaders([
-  {
-    name: 'x-authorization', // Tên của custom header
-    description: 'add access token', // Mô tả cho header
-    required: true, // Nếu header này bắt buộc
-  },
-  {
-    name: 'employee_id', // Tên của custom header
-    description: 'add employee_id', // Mô tả cho header
-    required: true, // Nếu header này bắt buộc
-  },
-])
 @Controller('posts')
 export class PostController {
   constructor(private postService: PostService) {}

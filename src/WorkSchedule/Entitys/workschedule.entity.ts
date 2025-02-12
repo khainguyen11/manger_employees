@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import { Employee } from 'src/employees/Entity/employee.entity';
 import {
   Entity,
@@ -10,16 +11,16 @@ import {
 @Entity()
 export class WorkSchedule {
   @PrimaryGeneratedColumn()
+  @Exclude()
   id: number;
-
   @Column()
-  workDate: String; // Ngày làm việc đã đăng ký (yyyy-mm-dd)
+  specific_time: String;
+  @Column()
+  start_time: String;
+  @Column()
+  end_time: String;
   @ManyToOne(() => Employee, (Employee) => Employee.workSchedules, {
     onDelete: 'CASCADE',
   })
   employee: Employee;
-  @Column()
-  weekNumber: number;
-  @Column()
-  year: number;
 }
